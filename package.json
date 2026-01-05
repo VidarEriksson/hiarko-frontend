@@ -19,6 +19,8 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "svelte-spa-router": "^4.0.1"
+    "@tailwindcss/vite": "^4.1.18",
+    "svelte-spa-router": "^4.0.1",
+    "tailwindcss": "^4.1.18"
   }
 }
