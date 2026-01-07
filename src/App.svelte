@@ -5,11 +5,13 @@
   import Login from "./routes/Login.svelte";
   import Landing from "./routes/Landing.svelte";
   import Boards from "./routes/Boards.svelte";
+  import Register from "./routes/Register.svelte";
   import NotFound from "./routes/NotFound.svelte";
 
   const routes = {
     "/": Root,
     "/login": Login,
+    "/register": Register,
     "/landing": Landing,
     "/boards": Boards,
     "*": NotFound

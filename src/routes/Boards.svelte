@@ -39,7 +39,7 @@
     if (!error) closeCreate();
   }
 
-  $: if (!$auth.token) push("/login");
+  $: if ($auth.initialized && !$auth.token) push("/login");
 
   const API_BASE = import.meta.env.VITE_API_URL;
 

@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { auth } from "../stores/auth.store";
+  import { auth, initAuth } from "../stores/auth.store";
   import { push } from "svelte-spa-router";
   import { onMount } from "svelte";
 
-  onMount(() => {
+  onMount(async () => {
+    if (!$auth.initialized) await initAuth();
+
     if ($auth.token) push("/boards");
     else push("/login");
   });
