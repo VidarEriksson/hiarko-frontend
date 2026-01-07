@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
 
   onMount(() => {
-    if ($auth.token) push("/landing");
+    if ($auth.token) push("/boards");
     else push("/login");
   });
 </script>
