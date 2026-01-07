@@ -115,6 +115,44 @@ export async function signIn(email: string, password: string) {
 }
 
 /**
+ * Registers a user and signs them in if the API returns a token.
+ * POST /auth/register { email, password } -> { token }
+ */
+export async function register(email: string, password: string) {
+  auth.update((s) => ({ ...s, loading: true, error: null }));
+
+  try {
+    const res = await request<{ token?: string }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    // If API returns a token, store it and load the user
+    if (res.token) {
+      const t = res.token ?? null;
+      setStoredToken(t);
+      auth.update((s) => ({ ...s, token: t }));
+      await loadMe();
+    }
+
+    return res;
+  } catch (e) {
+    setStoredToken(null);
+
+    auth.update((s) => ({
+      ...s,
+      token: null,
+      user: null,
+      error: e instanceof Error ? e.message : "Registration failed",
+    }));
+
+    throw e;
+  } finally {
+    auth.update((s) => ({ ...s, loading: false }));
+  }
+}
+
+/**
  * Loads the user profile from /auth/me using current token.
  * GET /auth/me -> { user: { email, id, iat, exp } }
  */

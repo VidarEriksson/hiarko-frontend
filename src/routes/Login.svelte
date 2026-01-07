@@ -7,7 +7,7 @@
   let loading = false;
   let error: string | null = null;
 
-  $: if ($auth.token) push("/boards");
+  $: if ($auth.initialized && $auth.token) push("/boards");
 
   async function handleLogin() {
     loading = true;
