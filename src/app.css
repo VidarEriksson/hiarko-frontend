@@ -1,1 +1,16 @@
+:root {
+  --color-bg: #f8fafc;
+  --color-foreground: #0f172a;
+  --color-accent: #7c3aed;
+  --color-accent-600: #6d28d9;
+  --color-accent-rgb: 124, 58, 237;
+  --color-accent-2-rgb: 99, 102, 241;
+  --color-card: #ffffff;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-foreground);
+}
+
 @import "tailwindcss";
