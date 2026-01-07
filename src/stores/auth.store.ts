@@ -15,7 +15,7 @@ type AuthState = {
   initialized: boolean;
 };
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL;
 const TOKEN_KEY = "auth_token";
 
 function getStoredToken(): string | null {
