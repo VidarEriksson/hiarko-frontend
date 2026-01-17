@@ -5,6 +5,7 @@
   import Login from "./routes/Login.svelte";
   import Landing from "./routes/Landing.svelte";
   import Boards from "./routes/Boards.svelte";
+  import Board from "./routes/boards/[id].svelte";
   import Register from "./routes/Register.svelte";
   import NotFound from "./routes/NotFound.svelte";
 
@@ -14,6 +15,7 @@
     "/register": Register,
     "/landing": Landing,
     "/boards": Boards,
+    "/boards/:id": Board,
     "*": NotFound
   };
 </script>
