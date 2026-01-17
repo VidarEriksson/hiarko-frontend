@@ -112,9 +112,9 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="flex gap-6 overflow-x-auto pb-4">
       {#each board.columns as column (column.id)}
-        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 flex-shrink-0 w-80">
           <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center">
             <h2 class="text-xl font-bold">{column.name}</h2>
             <button
