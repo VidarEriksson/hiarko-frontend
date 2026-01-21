@@ -40,12 +40,11 @@
   }
 
   async function addColumn() {
-    const title = newColumnTitle.trim();
-    if (!title) return;
+    const title = prompt("Column name:");
+    if (!title || !title.trim()) return;
 
     try {
-      await createColumn(board.id, title);
-      newColumnTitle = "";
+      await createColumn(board.id, title.trim());
       await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
@@ -99,20 +98,7 @@
       {/if}
     </div>
 
-    <div class="mb-6 flex gap-2">
-      <input
-        type="text"
-        placeholder="New column name..."
-        bind:value={newColumnTitle}
-        on:keydown={(e) => e.key === 'Enter' && addColumn()}
-        class="border border-gray-300 rounded px-3 py-2"
-      />
-      <button on:click={addColumn} class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        Add Column
-      </button>
-    </div>
-
-    <div class="flex gap-6 overflow-x-auto pb-4">
+    <div class="flex gap-6 overflow-x-auto pb-4 items-start">
       {#each board.columns as column (column.id)}
         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 shrink-0 w-80">
           <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center">
@@ -163,6 +149,17 @@
           </div>
         </div>
       {/each}
+
+      <!-- Add Column Button -->
+      <button
+        on:click={addColumn}
+        class="shrink-0 w-80 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"
+      >
+        <div class="flex flex-col items-center gap-2">
+          <div class="text-3xl text-gray-400 hover:text-blue-500">+</div>
+          <div class="text-sm text-gray-600 hover:text-blue-600 font-medium">New Column</div>
+        </div>
+      </button>
     </div>
   </div>
 {/if}
