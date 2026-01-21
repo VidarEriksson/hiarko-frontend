@@ -51,13 +51,12 @@
     }
   }
 
-  async function addTask(columnId: number) {
-    const title = (taskInputs[columnId] || "").trim();
-    if (!title) return;
+  async function addTask(columnId: number, title?: string) {
+    let taskTitle = title || prompt("Task name:");
+    if (!taskTitle || !taskTitle.trim()) return;
 
     try {
-      await createTask(columnId, title);
-      taskInputs[columnId] = "";
+      await createTask(columnId, taskTitle.trim());
       await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
@@ -131,22 +130,14 @@
             {/each}
           </div>
 
-          <!-- Task Input -->
-          <div class="flex gap-2">
-            <input
-              type="text"
-              placeholder="New task..."
-              bind:value={taskInputs[column.id]}
-              on:keydown={(e) => e.key === 'Enter' && addTask(column.id)}
-              class="border border-gray-300 rounded px-2 py-1 text-sm flex-1"
-            />
-            <button
-              on:click={() => addTask(column.id)}
-              class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-            >
-              Add
-            </button>
-          </div>
+          <!-- Add Task Button -->
+          <button
+            on:click={() => addTask(column.id)}
+            class="w-full py-2 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600"
+          >
+            <span class="text-xl">+</span>
+            Add Task
+          </button>
         </div>
       {/each}
 
