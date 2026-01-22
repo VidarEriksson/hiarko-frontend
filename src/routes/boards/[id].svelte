@@ -16,6 +16,12 @@
   let newColumnTitle = "";
   let taskInputs: { [key: number]: string } = {};
 
+  // Task modal state
+  let showTaskModal = false;
+  let taskModalColumnId: number | null = null;
+  let taskModalTitle = "";
+  let taskModalDescription = "";
+
   onMount(() => {
     if ($params?.id) {
       load($params.id);
@@ -51,16 +57,30 @@
     }
   }
 
-  async function addTask(columnId: number, title?: string) {
-    let taskTitle = title || prompt("Task name:");
-    if (!taskTitle || !taskTitle.trim()) return;
+  function openTaskModal(columnId: number) {
+    taskModalColumnId = columnId;
+    taskModalTitle = "";
+    taskModalDescription = "";
+    showTaskModal = true;
+  }
+
+  async function submitTask() {
+    if (!taskModalTitle.trim() || !taskModalColumnId) {
+      closeTaskModal();
+      return;
+    }
 
     try {
-      await createTask(columnId, taskTitle.trim());
+      await createTask(taskModalColumnId, taskModalTitle.trim(), taskModalDescription.trim());
+      closeTaskModal();
       await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     }
+  }
+
+  function closeTaskModal() {
+    showTaskModal = false;
   }
 
   async function deleteTaskHandler(taskId: number) {
@@ -128,11 +148,40 @@
                 </button>
               </div>
             {/each}
+
+            <!-- Task Creation Form -->
+            {#if showTaskModal && taskModalColumnId === column.id}
+              <div 
+                class="bg-white border border-gray-200 rounded p-3"
+                on:focusout={(e) => {
+                  const currentTarget = e.currentTarget as HTMLElement;
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  if (currentTarget && !currentTarget.contains(relatedTarget)) {
+                    submitTask();
+                  }
+                }}
+              >
+                <input
+                  id="taskTitle_{column.id}"
+                  type="text"
+                  placeholder="Task title..."
+                  bind:value={taskModalTitle}
+                  on:keydown={(e) => e.key === 'Enter' && submitTask()}
+                  class="w-full font-medium mb-2 text-sm border-0 p-0 focus:outline-none"
+                />
+                <textarea
+                  id="taskDesc_{column.id}"
+                  placeholder="Add description..."
+                  bind:value={taskModalDescription}
+                  rows="1"
+                  class="w-full text-sm text-gray-600 border-0 p-0 focus:outline-none resize-none"></textarea>
+              </div>
+            {/if}
           </div>
 
           <!-- Add Task Button -->
           <button
-            on:click={() => addTask(column.id)}
+            on:click={() => openTaskModal(column.id)}
             class="w-full py-2 rounded-lg border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center gap-2 text-sm font-medium text-gray-600 hover:text-green-600"
           >
             <span class="text-xl">+</span>
