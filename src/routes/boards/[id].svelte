@@ -22,6 +22,10 @@
   let taskModalTitle = "";
   let taskModalDescription = "";
 
+  // Column modal state
+  let showColumnModal = false;
+  let columnModalTitle = "";
+
   onMount(() => {
     if ($params?.id) {
       load($params.id);
@@ -55,6 +59,30 @@
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     }
+  }
+
+  function openColumnModal() {
+    showColumnModal = true;
+    columnModalTitle = "";
+  }
+
+  async function submitColumn() {
+    if (!columnModalTitle.trim()) {
+      closeColumnModal();
+      return;
+    }
+
+    try {
+      await createColumn(board.id, columnModalTitle.trim());
+      closeColumnModal();
+      await load(board.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function closeColumnModal() {
+    showColumnModal = false;
   }
 
   function openTaskModal(columnId: number) {
@@ -190,16 +218,39 @@
         </div>
       {/each}
 
-      <!-- Add Column Button -->
-      <button
-        on:click={addColumn}
-        class="shrink-0 w-80 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"
-      >
-        <div class="flex flex-col items-center gap-2">
-          <div class="text-3xl text-gray-400 hover:text-blue-500">+</div>
-          <div class="text-sm text-gray-600 hover:text-blue-600 font-medium">New Column</div>
+      <!-- Add Column Form -->
+      {#if showColumnModal}
+        <div 
+          class="bg-gray-50 rounded-lg border border-gray-200 p-4 shrink-0 w-80"
+          on:focusout={(e) => {
+            const currentTarget = e.currentTarget as HTMLElement;
+            const relatedTarget = e.relatedTarget as HTMLElement;
+            if (currentTarget && !currentTarget.contains(relatedTarget)) {
+              submitColumn();
+            }
+          }}
+        >
+          <input
+            id="columnTitle"
+            type="text"
+            placeholder="Column name..."
+            bind:value={columnModalTitle}
+            on:keydown={(e) => e.key === 'Enter' && submitColumn()}
+            class="w-full text-xl font-bold border-0 p-0 focus:outline-none bg-transparent"
+          />
         </div>
-      </button>
+      {:else}
+        <!-- Add Column Button -->
+        <button
+          on:click={openColumnModal}
+          class="shrink-0 w-80 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-3xl text-gray-400 hover:text-blue-500">+</div>
+            <div class="text-sm text-gray-600 hover:text-blue-600 font-medium">New Column</div>
+          </div>
+        </button>
+      {/if}
     </div>
   </div>
 {/if}
