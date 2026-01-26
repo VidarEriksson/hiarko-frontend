@@ -7,6 +7,7 @@
     createTask,
     deleteTask,
     deleteColumn,
+    updateColumn,
   } from "../../lib/api";
 
   let loading = true;
@@ -15,6 +16,10 @@
 
   let newColumnTitle = "";
   let taskInputs: { [key: number]: string } = {};
+
+  let editingColumnId: number | null = null;
+  let editingColumnName: string = "";
+  let editInputRef: HTMLInputElement;
 
   // Task modal state
   let showTaskModal = false;
@@ -85,6 +90,33 @@
     showColumnModal = false;
   }
 
+  function openEditColumn(columnId: number, columnName: string) {
+    editingColumnId = columnId;
+    editingColumnName = columnName;
+    setTimeout(() => editInputRef?.focus(), 0);
+  }
+
+  async function saveEditColumn() {
+    if (!editingColumnName.trim() || !editingColumnId) {
+      closeEditColumn();
+      return;
+    }
+
+    try {
+      await updateColumn(editingColumnId, { name: editingColumnName.trim() });
+      closeEditColumn();
+      await load(board.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+      closeEditColumn();
+    }
+  }
+
+  function closeEditColumn() {
+    editingColumnId = null;
+    editingColumnName = "";
+  }
+
   function openTaskModal(columnId: number) {
     taskModalColumnId = columnId;
     taskModalTitle = "";
@@ -148,11 +180,32 @@
     <div class="flex gap-6 overflow-x-auto pb-4 items-start">
       {#each board.columns as column (column.id)}
         <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 shrink-0 w-80">
-          <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 class="text-xl font-bold">{column.name}</h2>
+          <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center group">
+            {#if editingColumnId === column.id}
+              <input
+                type="text"
+                bind:value={editingColumnName}
+                bind:this={editInputRef}
+                on:keydown={(e) => {
+                  if (e.key === 'Enter') saveEditColumn();
+                  if (e.key === 'Escape') closeEditColumn();
+                }}
+                on:focusout={saveEditColumn}
+                class="flex-1 text-xl font-bold bg-white border border-blue-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            {:else}
+              <h2 class="text-xl font-bold">{column.name}</h2>
+              <button
+                on:click={() => openEditColumn(column.id, column.name)}
+                class="ml-2 px-3 py-2 text-lg text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 hover:bg-blue-100 rounded transition-all duration-200"
+                title="Edit column name"
+              >
+                ✎
+              </button>
+            {/if}
             <button
               on:click={() => deleteColumnHandler(column.id)}
-              class="text-red-600 hover:text-red-800 text-sm"
+              class="text-red-600 hover:text-red-800 text-sm ml-2"
             >
               Delete
             </button>
