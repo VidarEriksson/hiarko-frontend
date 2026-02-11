@@ -25,6 +25,7 @@
   // Drag and drop state
   let draggedTask: any = null;
   let draggedFromColumnId: number | null = null;
+  let dropIndicatorPosition: { columnId: number; position: number } | null = null;
 
   // Task modal state
   let showTaskModal = false;
@@ -183,19 +184,50 @@
     }
   }
 
+  function handleDragOverTask(
+    e: DragEvent,
+    columnId: number,
+    taskIndex: number,
+    isAfter: boolean = false
+  ) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+    dropIndicatorPosition = {
+      columnId,
+      position: isAfter ? taskIndex + 1 : taskIndex,
+    };
+  }
+
+  function handleDragLeave(e: DragEvent) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      dropIndicatorPosition = null;
+    }
+  }
+
   async function handleDropOnColumn(e: DragEvent, columnId: number) {
     e.preventDefault();
     if (!draggedTask || draggedFromColumnId === null || draggedFromColumnId === columnId) {
       draggedTask = null;
       draggedFromColumnId = null;
+      dropIndicatorPosition = null;
       return;
     }
 
     try {
-      // Always drop at position 0 (top of the column) for consistent behavior
-      await moveTask(draggedTask.id, columnId, 0);
+      // Drop at the indicated position, or at the end if no position was set
+      const position = dropIndicatorPosition?.position ?? board.columns.find((c: any) => c.id === columnId)?.tasks?.length ?? 0;
+      await moveTask(draggedTask.id, columnId, position);
       draggedTask = null;
       draggedFromColumnId = null;
+      dropIndicatorPosition = null;
       await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
@@ -257,14 +289,19 @@
           </div>
 
           <!-- Tasks -->
-          <div class="space-y-2 mb-4">
-            {#each column.tasks as task (task.id)}
+          <div class="space-y-0 mb-4" role="region" on:dragleave={handleDragLeave}>
+            {#each column.tasks as task, index (task.id)}
+              <!-- Drop indicator above task -->
+              {#if dropIndicatorPosition?.columnId === column.id && dropIndicatorPosition?.position === index}
+                <div class="h-0.5 bg-blue-500 my-1"></div>
+              {/if}
               <div
                 class="bg-white border border-gray-200 rounded p-3 flex justify-between items-start cursor-move hover:shadow-md transition-shadow"
                 role="button"
                 tabindex="0"
                 draggable="true"
                 on:dragstart={(e) => handleDragStart(e, task, column.id)}
+                on:dragover={(e) => handleDragOverTask(e, column.id, index, false)}
               >
                 <div>
                   <p class="font-medium">{task.title}</p>
@@ -279,7 +316,17 @@
                   ✕
                 </button>
               </div>
+              <!-- Drop indicator after last task -->
+              {#if index === column.tasks.length - 1 && dropIndicatorPosition?.columnId === column.id && dropIndicatorPosition?.position === index + 1}
+                <div class="h-0.5 bg-blue-500 my-1"></div>
+              {/if}
             {/each}
+            <!-- Drop indicator for empty column or below all tasks -->
+            {#if column.tasks.length === 0 && dropIndicatorPosition?.columnId === column.id}
+              <div class="h-0.5 bg-blue-500 my-1"></div>
+            {:else if column.tasks.length > 0 && dropIndicatorPosition?.columnId === column.id && dropIndicatorPosition?.position === column.tasks.length}
+              <div class="h-0.5 bg-blue-500 my-1"></div>
+            {/if}
 
             <!-- Task Creation Form -->
             {#if showTaskModal && taskModalColumnId === column.id}
