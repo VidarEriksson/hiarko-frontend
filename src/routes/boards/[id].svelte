@@ -8,6 +8,7 @@
     deleteTask,
     deleteColumn,
     updateColumn,
+    moveTask,
   } from "../../lib/api";
 
   let loading = true;
@@ -20,6 +21,10 @@
   let editingColumnId: number | null = null;
   let editingColumnName: string = "";
   let editInputRef: HTMLInputElement;
+
+  // Drag and drop state
+  let draggedTask: any = null;
+  let draggedFromColumnId: number | null = null;
 
   // Task modal state
   let showTaskModal = false;
@@ -162,6 +167,41 @@
     }
   }
 
+  function handleDragStart(e: DragEvent, task: any, columnId: number) {
+    draggedTask = task;
+    draggedFromColumnId = columnId;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", task.id);
+    }
+  }
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+  }
+
+  async function handleDropOnColumn(e: DragEvent, columnId: number) {
+    e.preventDefault();
+    if (!draggedTask || draggedFromColumnId === null || draggedFromColumnId === columnId) {
+      draggedTask = null;
+      draggedFromColumnId = null;
+      return;
+    }
+
+    try {
+      // Always drop at position 0 (top of the column) for consistent behavior
+      await moveTask(draggedTask.id, columnId, 0);
+      draggedTask = null;
+      draggedFromColumnId = null;
+      await load(board.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  }
+
 </script>
 
 {#if loading}
@@ -179,7 +219,12 @@
 
     <div class="flex gap-6 overflow-x-auto pb-4 items-start">
       {#each board.columns as column (column.id)}
-        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 shrink-0 w-80">
+        <div
+          class="bg-gray-50 rounded-lg border border-gray-200 p-4 shrink-0 w-80"
+          role="region"
+          on:dragover={handleDragOver}
+          on:drop={(e) => handleDropOnColumn(e, column.id)}
+        >
           <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center group">
             {#if editingColumnId === column.id}
               <input
@@ -214,7 +259,13 @@
           <!-- Tasks -->
           <div class="space-y-2 mb-4">
             {#each column.tasks as task (task.id)}
-              <div class="bg-white border border-gray-200 rounded p-3 flex justify-between items-start">
+              <div
+                class="bg-white border border-gray-200 rounded p-3 flex justify-between items-start cursor-move hover:shadow-md transition-shadow"
+                role="button"
+                tabindex="0"
+                draggable="true"
+                on:dragstart={(e) => handleDragStart(e, task, column.id)}
+              >
                 <div>
                   <p class="font-medium">{task.title}</p>
                   {#if task.description}
