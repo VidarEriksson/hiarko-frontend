@@ -222,8 +222,19 @@
     }
 
     try {
-      // Drop at the indicated position, or at the end if no position was set
-      const position = dropIndicatorPosition?.position ?? board.columns.find((c: any) => c.id === columnId)?.tasks?.length ?? 0;
+      let position = dropIndicatorPosition?.position ?? board.columns.find((c: any) => c.id === columnId)?.tasks?.length ?? 0;
+      
+      // If dragging within the same column, adjust position if needed
+      if (draggedFromColumnId === columnId) {
+        const sourceColumn = board.columns.find((c: any) => c.id === columnId);
+        const currentTaskIndex = sourceColumn?.tasks?.findIndex((t: any) => t.id === draggedTask.id) ?? -1;
+        
+        // If dropping after the current position, subtract 1 to account for the task being removed
+        if (currentTaskIndex >= 0 && position > currentTaskIndex) {
+          position = position - 1;
+        }
+      }
+      
       await moveTask(draggedTask.id, columnId, position);
       draggedTask = null;
       draggedFromColumnId = null;
