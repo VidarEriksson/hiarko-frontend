@@ -84,9 +84,11 @@
     }
 
     try {
-      await createColumn(board.id, columnModalTitle.trim());
+      const { column } = await createColumn(board.id, columnModalTitle.trim());
+      // Optimistic update - add column locally
+      board.columns = [...board.columns, { ...column, tasks: [] }];
+      board = board; // Trigger Svelte reactivity
       closeColumnModal();
-      await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     }
@@ -137,9 +139,14 @@
     }
 
     try {
-      await createTask(taskModalColumnId, taskModalTitle.trim(), taskModalDescription.trim());
+      const { task } = await createTask(taskModalColumnId, taskModalTitle.trim(), taskModalDescription.trim());
+      // Optimistic update - add task locally
+      const column = board.columns.find((c: any) => c.id === taskModalColumnId);
+      if (column) {
+        column.tasks = [...column.tasks, task];
+        board = board; // Trigger Svelte reactivity
+      }
       closeTaskModal();
-      await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     }

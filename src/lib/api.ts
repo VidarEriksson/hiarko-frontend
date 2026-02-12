@@ -32,7 +32,7 @@ export function getBoard(boardId: number | string) {
 }
 
 export function createColumn(boardId: number | string, name: string) {
-  return request(`/boards/${boardId}/columns`, {
+  return request<{ column: any }>(`/boards/${boardId}/columns`, {
     method: "POST",
     body: JSON.stringify({ name }),
   });
@@ -64,7 +64,7 @@ export function createTask(
   title: string,
   description?: string
 ) {
-  return request(`/columns/${columnId}/tasks`, {
+  return request<{ task: any }>(`/columns/${columnId}/tasks`, {
     method: "POST",
     body: JSON.stringify({ title, description }),
   });
