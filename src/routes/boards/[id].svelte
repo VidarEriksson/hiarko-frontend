@@ -214,7 +214,7 @@
 
   async function handleDropOnColumn(e: DragEvent, columnId: number) {
     e.preventDefault();
-    if (!draggedTask || draggedFromColumnId === null || draggedFromColumnId === columnId) {
+    if (!draggedTask || draggedFromColumnId === null) {
       draggedTask = null;
       draggedFromColumnId = null;
       dropIndicatorPosition = null;
