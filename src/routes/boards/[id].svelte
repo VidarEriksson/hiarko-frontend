@@ -242,13 +242,30 @@
         }
       }
       
+      // Optimistic update - move task locally
+      const fromColumn = board.columns.find((c: any) => c.id === draggedFromColumnId);
+      const toColumn = board.columns.find((c: any) => c.id === columnId);
+      
+      if (fromColumn && toColumn) {
+        // Remove from source column
+        fromColumn.tasks = fromColumn.tasks.filter((t: any) => t.id !== draggedTask.id);
+        // Add to target column at the correct position
+        toColumn.tasks = [
+          ...toColumn.tasks.slice(0, position),
+          draggedTask,
+          ...toColumn.tasks.slice(position)
+        ];
+        board = board; // Trigger Svelte reactivity
+      }
+      
       await moveTask(draggedTask.id, columnId, position);
       draggedTask = null;
       draggedFromColumnId = null;
       dropIndicatorPosition = null;
-      await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
+      // Reload on error to restore correct state
+      await load(board.id);
     }
   }
 
