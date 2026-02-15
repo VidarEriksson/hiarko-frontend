@@ -158,20 +158,36 @@
 
   async function deleteTaskHandler(taskId: number) {
     try {
+      // Find which column the task is in and remove it optimistically
+      const columnWithTask = board.columns.find((col: any) =>
+        col.tasks.some((task: any) => task.id === taskId)
+      );
+
+      if (columnWithTask) {
+        columnWithTask.tasks = columnWithTask.tasks.filter(
+          (task: any) => task.id !== taskId
+        );
+        board = board; // Trigger Svelte reactivity
+      }
+
       await deleteTask(taskId);
-      await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
+      await load(board.id); // Reload on error to restore state
     }
   }
 
   async function deleteColumnHandler(columnId: number) {
     if (!confirm("Delete this column?")) return;
     try {
+      // Remove column optimistically
+      board.columns = board.columns.filter((col: any) => col.id !== columnId);
+      board = board; // Trigger Svelte reactivity
+
       await deleteColumn(columnId);
-      await load(board.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
+      await load(board.id); // Reload on error to restore state
     }
   }
 
