@@ -309,31 +309,35 @@
           on:drop={(e) => handleDropOnColumn(e, column.id)}
         >
           <div class="mb-4 pb-4 border-b border-gray-200 flex justify-between items-center group">
-            {#if editingColumnId === column.id}
-              <input
-                type="text"
-                bind:value={editingColumnName}
-                bind:this={editInputRef}
-                on:keydown={(e) => {
-                  if (e.key === 'Enter') saveEditColumn();
-                  if (e.key === 'Escape') closeEditColumn();
-                }}
-                on:focusout={saveEditColumn}
-                class="flex-1 text-xl font-bold bg-white border border-blue-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            {:else}
-              <h2 class="text-xl font-bold">{column.name}</h2>
-              <button
-                on:click={() => openEditColumn(column.id, column.name)}
-                class="ml-2 px-3 py-2 text-lg text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-600 hover:bg-blue-100 rounded transition-all duration-200"
-                title="Edit column name"
-              >
-                ✎
-              </button>
-            {/if}
+            <div class="flex-1 min-w-0">
+              {#if editingColumnId === column.id}
+                <input
+                  type="text"
+                  bind:value={editingColumnName}
+                  bind:this={editInputRef}
+                  on:keydown={(e) => {
+                    if (e.key === 'Enter') saveEditColumn();
+                    if (e.key === 'Escape') closeEditColumn();
+                  }}
+                  on:focusout={saveEditColumn}
+                  class="w-full text-xl font-bold bg-white border border-blue-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              {:else}
+                <h2 class="text-xl font-bold">{column.name}</h2>
+              {/if}
+            </div>
+            <button
+              on:click={() => openEditColumn(column.id, column.name)}
+              class="ml-2 px-2 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded transition-all duration-200"
+              title="Edit column name"
+            >
+              <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
             <button
               on:click={() => deleteColumnHandler(column.id)}
-              class="ml-2 px-2 py-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200 group/delete"
+              class="ml-2 px-2 py-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200 {editingColumnId === column.id ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
               title="Delete column"
             >
               <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
