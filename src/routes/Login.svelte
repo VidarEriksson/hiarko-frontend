@@ -7,14 +7,14 @@
   let loading = false;
   let error: string | null = null;
 
-  $: if ($auth.initialized && $auth.token) push("/boards");
+  $: if ($auth.initialized && $auth.token) push("/landing");
 
   async function handleLogin() {
     loading = true;
     error = null;
     try {
       await signIn(email, password);
-      push("/boards");
+      push("/landing");
     } catch (e) {
       error = e instanceof Error ? e.message : "Login failed";
     } finally {
