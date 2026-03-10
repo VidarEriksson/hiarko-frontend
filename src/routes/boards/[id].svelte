@@ -323,7 +323,7 @@
                   class="w-full text-xl font-bold bg-white border border-blue-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               {:else}
-                <h2 class="text-xl font-bold">{column.name}</h2>
+                <h2 class="text-xl font-bold truncate" title={column.name}>{column.name}</h2>
               {/if}
             </div>
             <button
