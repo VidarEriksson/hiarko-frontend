@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { auth } from "../stores/auth.store";
+import { auth, refreshAccessToken } from "../stores/auth.store";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -14,6 +14,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
     ...options,
   });
+
+  // On 401, attempt a token refresh and retry once
+  if (res.status === 401) {
+    let newToken: string;
+    try {
+      newToken = await refreshAccessToken();
+    } catch {
+      const data = await res.json().catch(() => ({}));
+      const message = (data as any)?.message ?? `Request failed (${res.status})`;
+      throw new Error(message);
+    }
+
+    const retryRes = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${newToken}`,
+        ...(options.headers ?? {}),
+      },
+      ...options,
+    });
+
+    const retryData = await retryRes.json();
+    if (!retryRes.ok) {
+      const message = (retryData as any)?.message ?? `Request failed (${retryRes.status})`;
+      throw new Error(message);
+    }
+    return retryData as T;
+  }
 
   const data = await res.json();
 
