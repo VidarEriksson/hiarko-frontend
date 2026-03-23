@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { auth, signOut } from "../stores/auth.store";
+  import { auth } from "../stores/auth.store";
   import { push } from "svelte-spa-router";
   import { listOrgs, createOrgBoard } from "../lib/api";
 
@@ -23,9 +23,8 @@
   let name = "";
   let description = "";
   let showCreate = false;
-  let createOrgId: number | null = null; // null = personal
+  let createOrgId: number | null = null;
 
-  // filter: "all" | "personal" | orgId (number)
   let filter: "all" | "personal" | number = "all";
 
   $: filteredBoards = filter === "all"
@@ -40,10 +39,7 @@
       ? "Personal"
       : orgs.find(o => o.id === filter)?.name ?? "Unknown";
 
-  function openCreate() {
-    createOrgId = null;
-    showCreate = true;
-  }
+  function openCreate() { createOrgId = null; showCreate = true; }
 
   function closeCreate() {
     showCreate = false;
@@ -131,91 +127,78 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <section class="min-h-screen p-8">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">Your boards</h1>
-      <p class="text-sm text-gray-600">Visualize and create boards for your projects.</p>
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-xl font-semibold" style="color: var(--color-foreground); letter-spacing: -0.3px;">Boards</h1>
+      <p class="text-sm mt-0.5" style="color: var(--color-secondary);">Your project boards across all workspaces.</p>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button class="px-4 py-2 rounded-md text-white font-semibold"
-        style="background: var(--color-accent); box-shadow: 0 6px 18px rgba(var(--color-accent-rgb),0.12);"
-        on:click={() => fetchBoards()}>
-        Refresh
-      </button>
-      <button class="px-4 py-2 rounded-md bg-transparent border border-gray-200 hover:bg-gray-50"
-        on:click={() => signOut()}>
-        Sign out
-      </button>
-    </div>
-  </div>
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between mb-6">
+      <select
+        class="text-sm px-3 py-2 rounded-lg focus:outline-none focus:ring-2 cursor-pointer"
+        style="border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground);"
+        value={filter}
+        on:change={(e) => {
+          const v = (e.target as HTMLSelectElement).value;
+          filter = v === "all" ? "all" : v === "personal" ? "personal" : Number(v);
+        }}>
+        <option value="all">All boards</option>
+        <option value="personal">Personal</option>
+        {#each orgs as org}
+          <option value={org.id}>{org.name}</option>
+        {/each}
+      </select>
 
-  <!-- Filter dropdown -->
-  <div class="mt-6 flex items-center gap-2">
-    <span class="text-sm text-gray-500">Show:</span>
-    <select
-      class="text-sm border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none bg-white"
-      style="background: var(--color-card);"
-      value={filter}
-      on:change={(e) => {
-        const v = (e.target as HTMLSelectElement).value;
-        filter = v === "all" ? "all" : v === "personal" ? "personal" : Number(v);
-      }}>
-      <option value="all">All boards</option>
-      <option value="personal">Personal</option>
-      {#each orgs as org}
-        <option value={org.id}>{org.name}</option>
-      {/each}
-    </select>
-  </div>
-
-  <div class="mt-4">
-    <!-- Floating create button -->
-    <div class="fixed bottom-6 right-6 z-50">
-      <button aria-label="Create board"
-        class="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transform hover:scale-105 transition"
-        style="background: var(--color-accent); box-shadow: 0 10px 30px rgba(var(--color-accent-rgb),0.18);"
+      <button
+        class="px-3.5 py-2 rounded-lg text-sm font-medium text-white flex items-center gap-2"
+        style="background: var(--color-accent);"
         on:click={openCreate}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
         </svg>
+        New board
       </button>
     </div>
 
+    <!-- Create modal -->
     {#if showCreate}
       <div class="fixed inset-0 z-40 flex items-center justify-center">
-        <button type="button" class="absolute inset-0 bg-black/50 border-0 p-0 m-0 focus:outline-none"
-          aria-label="Close create dialog" on:click={closeCreate}></button>
-        <div class="relative bg-white rounded-2xl shadow-lg p-6 w-full max-w-md mx-4"
-          role="dialog" aria-modal="true" aria-labelledby="create-dialog-title"
-          style="background: var(--color-card);">
-          <h2 id="create-dialog-title" class="text-lg font-semibold mb-4">Create board</h2>
+        <button type="button" class="absolute inset-0 bg-black/40 border-0 p-0 m-0 focus:outline-none"
+          aria-label="Close" on:click={closeCreate}></button>
+        <div class="relative rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
+          role="dialog" aria-modal="true"
+          style="background: var(--color-card); border: 1px solid var(--color-border);">
+          <h2 class="text-base font-semibold mb-4" style="color: var(--color-foreground);">New board</h2>
 
           {#if error}
-            <p class="text-sm text-red-600 mb-3">{error}</p>
+            <div class="px-3 py-2 rounded-lg text-sm mb-3" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">{error}</div>
           {/if}
 
-          <form on:submit|preventDefault={handleCreate}>
-            <div class="mb-3">
-              <label for="board-name" class="block text-sm font-medium mb-1">Name</label>
-              <input id="board-name" type="text" bind:value={name} placeholder="Board name"
-                class="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none" />
+          <form on:submit|preventDefault={handleCreate} class="space-y-3">
+            <div>
+              <label for="board-name" class="block text-sm font-medium mb-1.5" style="color: var(--color-foreground);">Name</label>
+              <input id="board-name" type="text" bind:value={name} placeholder="e.g. Product Roadmap"
+                class="w-full px-3.5 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2"
+                style="border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-foreground);" />
             </div>
 
             {#if createOrgId === null}
-              <div class="mb-3">
-                <label for="board-desc" class="block text-sm font-medium mb-1">Description (optional)</label>
+              <div>
+                <label for="board-desc" class="block text-sm font-medium mb-1.5" style="color: var(--color-foreground);">Description <span style="color: var(--color-secondary);">(optional)</span></label>
                 <input id="board-desc" type="text" bind:value={description} placeholder="Short description"
-                  class="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none" />
+                  class="w-full px-3.5 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2"
+                  style="border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-foreground);" />
               </div>
             {/if}
 
             {#if orgs.length > 0}
-              <div class="mb-4">
-                <label for="board-location" class="block text-sm font-medium mb-1">Create in</label>
+              <div>
+                <label for="board-location" class="block text-sm font-medium mb-1.5" style="color: var(--color-foreground);">Create in</label>
                 <select id="board-location"
-                  class="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none bg-white"
-                  style="background: var(--color-card);"
+                  class="w-full px-3.5 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 cursor-pointer"
+                  style="border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-foreground);"
                   value={createOrgId === null ? "personal" : String(createOrgId)}
                   on:change={(e) => {
                     const v = (e.target as HTMLSelectElement).value;
@@ -229,13 +212,16 @@
               </div>
             {/if}
 
-            <div class="flex justify-end gap-3">
-              <button type="button" class="px-4 py-2 rounded-md bg-transparent border border-gray-200"
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button"
+                class="px-4 py-2 rounded-lg text-sm font-medium"
+                style="background: transparent; border: 1px solid var(--color-border); color: var(--color-secondary);"
                 on:click={closeCreate}>Cancel</button>
               <button type="submit" disabled={creating}
-                class="px-4 py-2 rounded-md text-white font-semibold"
-                style="background: var(--color-accent); box-shadow: 0 8px 24px rgba(var(--color-accent-rgb),0.12);">
-                {creating ? "Creating…" : "Create"}
+                class="px-4 py-2 rounded-lg text-sm font-medium text-white"
+                style="background: var(--color-accent);"
+                class:opacity-60={creating}>
+                {creating ? "Creating…" : "Create board"}
               </button>
             </div>
           </form>
@@ -245,43 +231,65 @@
 
     <!-- Boards grid -->
     {#if loading}
-      <div class="p-6 bg-white rounded-2xl shadow mt-6" style="background: var(--color-card);">Loading boards…</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {#each [1,2,3] as _}
+          <div class="h-28 rounded-xl animate-pulse" style="background: var(--color-border);"></div>
+        {/each}
+      </div>
     {:else if filteredBoards.length === 0}
-      <div class="p-6 bg-white rounded-2xl shadow mt-6" style="background: var(--color-card);">
-        <p class="text-gray-600">
-          {filter === "all" ? "No boards yet. Create your first board." : `No boards in ${filterLabel}.`}
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-10 h-10 rounded-xl mb-4 flex items-center justify-center" style="background: rgba(124,58,237,0.08);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-accent);" stroke-linecap="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </div>
+        <p class="font-medium text-sm mb-1" style="color: var(--color-foreground);">
+          {filter === "all" ? "No boards yet" : `No boards in ${filterLabel}`}
         </p>
+        <p class="text-sm" style="color: var(--color-secondary);">Create a board to get started.</p>
       </div>
     {:else}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each filteredBoards as b}
-          <div class="bg-white rounded-xl shadow p-5 flex flex-col justify-between" style="background: var(--color-card);">
+          <div
+            class="rounded-xl p-5 flex flex-col justify-between cursor-pointer transition-shadow hover:shadow-md"
+            style="background: var(--color-card); border: 1px solid var(--color-border);"
+            role="button"
+            tabindex="0"
+            on:click={() => push(`/boards/${b.id}`)}
+            on:keydown={(e) => e.key === 'Enter' && push(`/boards/${b.id}`)}>
             <div>
-              <h3 class="text-lg font-semibold mb-1">{b.name}</h3>
               {#if b.orgId}
-                <p class="text-xs font-medium mb-1" style="color: var(--color-accent);">
+                <div class="text-xs font-medium mb-2" style="color: var(--color-accent);">
                   {orgs.find(o => o.id === b.orgId)?.name ?? "Organization"}
-                </p>
+                </div>
               {/if}
+              <h3 class="font-semibold text-sm mb-1" style="color: var(--color-foreground);">{b.name}</h3>
               {#if b.description}
-                <p class="text-sm text-gray-600 mb-3">{b.description}</p>
-              {/if}
-              {#if b.createdAt}
-                <p class="text-xs text-gray-400">Created: {new Date(b.createdAt).toLocaleString()}</p>
+                <p class="text-xs" style="color: var(--color-secondary);">{b.description}</p>
               {/if}
             </div>
-            <div class="mt-4 flex gap-3">
-              <button class="px-3 py-2 rounded-md text-white text-sm"
-                style="background: var(--color-accent);"
-                on:click={() => push(`/boards/${b.id}`)}>View</button>
-              <button class="px-3 py-2 rounded-md bg-transparent border border-gray-200 text-sm hover:bg-gray-50"
-                on:click={() => navigator.clipboard?.writeText(location.origin + `/boards/${b.id}`)}>
-                Copy link
-              </button>
-            </div>
+            {#if b.createdAt}
+              <p class="text-xs mt-4" style="color: var(--color-secondary);">
+                {new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            {/if}
           </div>
         {/each}
       </div>
     {/if}
+  </div>
+
+  <!-- FAB -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <button aria-label="Create board"
+      class="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-shadow"
+      style="background: var(--color-accent);"
+      on:click={openCreate}>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
   </div>
 </section>
