@@ -12,7 +12,6 @@
   async function handleRegister() {
     loading = true;
     error = null;
-
     try {
       const res = await register(email, password);
       if (!res.token) await signIn(email, password);
@@ -25,35 +24,62 @@
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center p-8">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-8" style="background: var(--color-card); border: 1px solid rgba(15,23,42,0.04);">
-    <h1 class="text-2xl font-bold mb-4 text-gray-900" style="color: var(--color-foreground);">Create an account</h1>
-    <p class="text-sm text-gray-600 mb-6">Start a free account and create your first board.</p>
-
-    <form on:submit|preventDefault={handleRegister} class="space-y-4">
-      <div>
-        <label for="register-email" class="sr-only">Email</label>
-        <input id="register-email" type="email" bind:value={email} required placeholder="Email"
-          class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50" />
+<div class="min-h-screen flex">
+  <!-- Left: form -->
+  <div class="w-full md:w-1/2 flex items-center justify-center p-8">
+    <div class="w-full max-w-sm">
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-6">
+          <div class="w-2 h-2 rounded-full" style="background: var(--color-accent);"></div>
+          <span class="font-bold text-base" style="color: var(--color-foreground);">Hiarko</span>
+        </div>
+        <h1 class="text-2xl font-bold mb-1" style="color: var(--color-foreground); letter-spacing: -0.4px;">Create an account</h1>
+        <p class="text-sm" style="color: var(--color-secondary);">Get started for free. No credit card required.</p>
       </div>
 
-      <div>
-        <label for="register-password" class="sr-only">Password</label>
-        <input id="register-password" type="password" bind:value={password} required minlength="6" placeholder="Password"
-          class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50" />
-      </div>
+      <form on:submit|preventDefault={handleRegister} class="space-y-3">
+        <div>
+          <label for="register-email" class="block text-sm font-medium mb-1.5" style="color: var(--color-foreground);">Email</label>
+          <input id="register-email" type="email" bind:value={email} required placeholder="you@example.com"
+            class="w-full px-3.5 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2"
+            style="border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground);" />
+        </div>
 
-      {#if error}
-        <p class="text-sm text-red-600">{error}</p>
-      {/if}
+        <div>
+          <label for="register-password" class="block text-sm font-medium mb-1.5" style="color: var(--color-foreground);">Password</label>
+          <input id="register-password" type="password" bind:value={password} required minlength="6" placeholder="Min. 6 characters"
+            class="w-full px-3.5 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2"
+            style="border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground);" />
+        </div>
 
-      <button class="w-full py-3 rounded-lg font-semibold"
-        style="background: transparent; color: var(--color-accent); border: 2px solid var(--color-accent);"
-        disabled={loading}>
-        {loading ? "Creating…" : "Create account"}
-      </button>
+        {#if error}
+          <div class="px-3.5 py-2.5 rounded-lg text-sm" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">
+            {error}
+          </div>
+        {/if}
 
-      <p class="mt-4 text-center text-sm text-gray-600">Already have an account? <a href="#/login" class="text-indigo-600 font-medium">Sign in</a></p>
-    </form>
+        <button type="submit"
+          class="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity"
+          style="background: var(--color-accent);"
+          class:opacity-60={loading}
+          disabled={loading}>
+          {loading ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm" style="color: var(--color-secondary);">
+        Already have an account?
+        <a href="#/login" class="font-medium" style="color: var(--color-accent);">Sign in</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Right: brand panel -->
+  <div class="hidden md:flex md:w-1/2 items-center justify-center relative overflow-hidden"
+    style="background: linear-gradient(135deg, var(--color-accent) 0%, #4f46e5 100%);">
+    <div class="relative z-10 text-white text-center px-12">
+      <h2 class="text-3xl font-bold mb-3" style="letter-spacing: -0.5px;">Plan with clarity.</h2>
+      <p class="text-base opacity-80">Boards, tasks, and teams — all in one place.</p>
+    </div>
   </div>
 </div>
