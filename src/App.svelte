@@ -6,6 +6,8 @@
   import Landing from "./routes/Landing.svelte";
   import Boards from "./routes/Boards.svelte";
   import Board from "./routes/boards/[id].svelte";
+  import Orgs from "./routes/Orgs.svelte";
+  import Org from "./routes/orgs/[id].svelte";
   import Register from "./routes/Register.svelte";
   import NotFound from "./routes/NotFound.svelte";
 
@@ -18,6 +20,8 @@
     "/landing": Landing,
     "/boards": Boards,
     "/boards/:id": Board,
+    "/orgs": Orgs,
+    "/orgs/:id": Org,
     "*": NotFound
   };
 
@@ -87,6 +91,7 @@
 
 <nav class="menu {menuOpen ? 'open' : ''}">
   <a href="/boards" on:click|preventDefault={() => go('/boards')}>Boards</a>
+  <a href="/orgs" on:click|preventDefault={() => go('/orgs')}>Organizations</a>
 </nav>
 
 <Router {routes} />

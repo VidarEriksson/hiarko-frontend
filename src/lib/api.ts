@@ -119,3 +119,47 @@ export function moveTask(
 export function deleteTask(taskId: number | string) {
   return request(`/tasks/${taskId}`, { method: "DELETE" });
 }
+
+export function listOrgs() {
+  return request<{ orgs: any[] }>("/orgs", { method: "GET" });
+}
+
+export function createOrg(name: string) {
+  return request<{ org: any }>("/orgs", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function getOrg(orgId: number | string) {
+  return request<{ org: any; role: string }>(`/orgs/${orgId}`, { method: "GET" });
+}
+
+export function deleteOrg(orgId: number | string) {
+  return request(`/orgs/${orgId}`, { method: "DELETE" });
+}
+
+export function addOrgMember(orgId: number | string, userId: number, role?: string) {
+  return request(`/orgs/${orgId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ userId, role }),
+  });
+}
+
+export function removeOrgMember(orgId: number | string, userId: number) {
+  return request(`/orgs/${orgId}/members/${userId}`, { method: "DELETE" });
+}
+
+export function updateOrgMemberRole(orgId: number | string, userId: number, role: string) {
+  return request(`/orgs/${orgId}/members/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+}
+
+export function createOrgBoard(orgId: number | string, name: string) {
+  return request<{ board: any }>(`/orgs/${orgId}/boards`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
