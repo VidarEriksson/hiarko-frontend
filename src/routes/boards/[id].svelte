@@ -6,6 +6,7 @@
     getBoard,
     createColumn,
     createTask,
+    updateTask,
     deleteTask,
     deleteColumn,
     updateColumn,
@@ -28,6 +29,7 @@
   let taskModalColumnId: number | null = null;
   let taskModalTitle = "";
   let taskModalDescription = "";
+  let taskModalAssigneeId: number | null = null;
 
   let showColumnModal = false;
   let columnModalTitle = "";
@@ -99,17 +101,38 @@
     taskModalColumnId = columnId;
     taskModalTitle = "";
     taskModalDescription = "";
+    taskModalAssigneeId = null;
     showTaskModal = true;
   }
 
   async function submitTask() {
     if (!taskModalTitle.trim() || !taskModalColumnId) { closeTaskModal(); return; }
     try {
-      const { task } = await createTask(taskModalColumnId, taskModalTitle.trim(), taskModalDescription.trim());
+      const { task } = await createTask(taskModalColumnId, taskModalTitle.trim(), taskModalDescription.trim(), taskModalAssigneeId);
+      if (taskModalAssigneeId) {
+        const member = board.members.find((m: any) => m.user.id === taskModalAssigneeId);
+        if (member) task.assignee = member.user;
+      }
       const column = board.columns.find((c: any) => c.id === taskModalColumnId);
       if (column) { column.tasks = [...column.tasks, task]; board = board; }
       closeTaskModal();
     } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async function changeAssignee(taskId: number, assigneeId: number | null) {
+    const column = board.columns.find((c: any) => c.tasks.some((t: any) => t.id === taskId));
+    const task = column?.tasks.find((t: any) => t.id === taskId);
+    if (!task) return;
+    const prevAssignee = task.assignee;
+    task.assignee = assigneeId ? board.members.find((m: any) => m.user.id === assigneeId)?.user ?? null : null;
+    board = board;
+    try {
+      await updateTask(taskId, { assigneeId });
+    } catch (err) {
+      task.assignee = prevAssignee;
+      board = board;
       error = err instanceof Error ? err.message : String(err);
     }
   }
@@ -494,6 +517,38 @@
     color: var(--color-foreground);
   }
 
+  .task-footer {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+  }
+
+  .assignee-select {
+    font-size: 11px;
+    color: var(--color-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    max-width: 140px;
+    font-family: inherit;
+  }
+
+  .assignee-select:hover { color: var(--color-foreground); }
+
+  .task-inline-form select {
+    width: 100%;
+    font-size: 12px;
+    font-family: inherit;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-secondary);
+    margin-top: 4px;
+    cursor: pointer;
+  }
+
   .error-bar {
     position: fixed;
     bottom: 24px;
@@ -604,6 +659,19 @@
                   {#if task.description}
                     <p class="task-desc">{task.description}</p>
                   {/if}
+                  <div class="task-footer">
+                    <select
+                      class="assignee-select"
+                      value={task.assignee?.id ?? ''}
+                      on:change={(e) => changeAssignee(task.id, e.currentTarget.value ? Number(e.currentTarget.value) : null)}
+                      on:mousedown|stopPropagation
+                      on:click|stopPropagation>
+                      <option value="">Unassigned</option>
+                      {#each board.members as m}
+                        <option value={m.user.id}>{m.user.name || m.user.email}</option>
+                      {/each}
+                    </select>
+                  </div>
                 </div>
                 <button class="task-delete" on:click={() => deleteTaskHandler(task.id)} title="Delete task">×</button>
               </div>
@@ -633,6 +701,12 @@
                   placeholder="Description (optional)…"
                   bind:value={taskModalDescription}
                   rows="1"></textarea>
+                <select bind:value={taskModalAssigneeId}>
+                  <option value={null}>Unassigned</option>
+                  {#each board.members as m}
+                    <option value={m.user.id}>{m.user.name || m.user.email}</option>
+                  {/each}
+                </select>
               </div>
             {/if}
           </div>
