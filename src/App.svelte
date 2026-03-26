@@ -9,6 +9,7 @@
   import Board from "./routes/boards/[id].svelte";
   import Orgs from "./routes/Orgs.svelte";
   import Org from "./routes/orgs/[id].svelte";
+  import Invite from "./routes/invites/[token].svelte";
   import Register from "./routes/Register.svelte";
   import NotFound from "./routes/NotFound.svelte";
 
@@ -21,6 +22,7 @@
     "/boards/:id": Board,
     "/orgs": Orgs,
     "/orgs/:id": Org,
+    "/invites/:token": Invite,
     "*": NotFound,
   };
 

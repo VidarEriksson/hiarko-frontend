@@ -14,7 +14,13 @@
     error = null;
     try {
       await signIn(email, password);
-      push("/boards");
+      const redirect = sessionStorage.getItem("redirect");
+      if (redirect) {
+        sessionStorage.removeItem("redirect");
+        push(redirect);
+      } else {
+        push("/boards");
+      }
     } catch (e) {
       error = e instanceof Error ? e.message : "Login failed";
     } finally {

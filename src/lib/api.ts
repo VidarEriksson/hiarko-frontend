@@ -158,6 +158,25 @@ export function updateOrgMemberRole(orgId: number | string, userId: number, role
   });
 }
 
+export function createOrgInvite(orgId: number | string, email: string) {
+  return request<{ invite: any; link: string }>(`/orgs/${orgId}/invites`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function getInvite(token: string) {
+  return request<{ invite: any }>(`/invites/${token}`, { method: "GET" });
+}
+
+export function acceptInvite(token: string) {
+  return request<{ org: any }>(`/invites/${token}/accept`, { method: "POST" });
+}
+
+export function declineInvite(token: string) {
+  return request(`/invites/${token}/decline`, { method: "POST" });
+}
+
 export function createOrgBoard(orgId: number | string, name: string) {
   return request<{ board: any }>(`/orgs/${orgId}/boards`, {
     method: "POST",
