@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { auth } from "../../stores/auth.store";
-  import { getOrg, deleteOrg, removeOrgMember, updateOrgMemberRole } from "../../lib/api";
+  import { getOrg, deleteOrg, removeOrgMember, updateOrgMemberRole, createOrgInvite } from "../../lib/api";
 
   export let params: { id: string } = { id: "" };
 
@@ -13,6 +13,13 @@
   let myRole: string = "";
   let loading = false;
   let error: string | null = null;
+
+  let showInviteForm = false;
+  let inviteEmail = "";
+  let inviteLoading = false;
+  let inviteError: string | null = null;
+  let inviteLink: string | null = null;
+  let copied = false;
 
   $: if ($auth.initialized && !$auth.token) push("/login");
   $: canManage = myRole === "OWNER" || myRole === "ADMIN";
@@ -57,6 +64,36 @@
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     }
+  }
+
+  async function handleInvite() {
+    if (!inviteEmail.trim()) return;
+    inviteLoading = true;
+    inviteError = null;
+    inviteLink = null;
+    try {
+      const data = await createOrgInvite(params.id, inviteEmail.trim());
+      inviteLink = data.link;
+      inviteEmail = "";
+    } catch (e) {
+      inviteError = e instanceof Error ? e.message : String(e);
+    } finally {
+      inviteLoading = false;
+    }
+  }
+
+  async function copyLink() {
+    if (!inviteLink) return;
+    await navigator.clipboard.writeText(inviteLink);
+    copied = true;
+    setTimeout(() => (copied = false), 2000);
+  }
+
+  function closeInviteForm() {
+    showInviteForm = false;
+    inviteEmail = "";
+    inviteLink = null;
+    inviteError = null;
   }
 
   onMount(fetchOrg);
@@ -120,7 +157,68 @@
 
       <!-- Members -->
       <div>
-        <h2 class="text-sm font-semibold mb-3" style="color: var(--color-foreground);">Members <span style="color: var(--color-secondary); font-weight: 400;">({org.members.length})</span></h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold" style="color: var(--color-foreground);">Members <span style="color: var(--color-secondary); font-weight: 400;">({org.members.length})</span></h2>
+          {#if canManage}
+            <button
+              class="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style="background: rgba(124,58,237,0.08); color: var(--color-accent); border: none; cursor: pointer;"
+              on:click={() => { showInviteForm = !showInviteForm; inviteLink = null; inviteError = null; }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Invite
+            </button>
+          {/if}
+        </div>
+
+        {#if showInviteForm && canManage}
+          <div class="rounded-xl p-4 mb-3" style="background: var(--color-card); border: 1px solid var(--color-border);">
+            {#if inviteLink}
+              <p class="text-xs font-medium mb-2" style="color: var(--color-foreground);">Invite link created — share this with {inviteEmail || 'them'}:</p>
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  readonly
+                  value={inviteLink}
+                  class="flex-1 text-xs px-3 py-2 rounded-lg font-mono select-all"
+                  style="background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-secondary); outline: none;" />
+                <button
+                  class="text-xs px-3 py-2 rounded-lg font-medium flex-shrink-0 transition-colors"
+                  style="background: {copied ? 'rgba(34,197,94,0.1)' : 'rgba(124,58,237,0.08)'}; color: {copied ? '#16a34a' : 'var(--color-accent)'}; border: none; cursor: pointer;"
+                  on:click={copyLink}>
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs" style="color: var(--color-secondary);">Link expires in 7 days.</p>
+                <button class="text-xs" style="color: var(--color-secondary); background: none; border: none; cursor: pointer;" on:click={() => { inviteLink = null; }}>Invite another</button>
+              </div>
+            {:else}
+              <p class="text-xs mb-3" style="color: var(--color-secondary);">Enter the email address of the person you want to invite. They'll get a link to join this organization.</p>
+              <form on:submit|preventDefault={handleInvite} class="flex items-center gap-2">
+                <input
+                  type="email"
+                  placeholder="email@example.com"
+                  bind:value={inviteEmail}
+                  class="flex-1 text-sm px-3 py-2 rounded-lg"
+                  style="background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-foreground); outline: none; font-family: inherit;" />
+                <button
+                  type="submit"
+                  disabled={inviteLoading || !inviteEmail.trim()}
+                  class="text-sm px-3.5 py-2 rounded-lg font-medium flex-shrink-0"
+                  style="background: var(--color-accent); color: white; border: none; cursor: pointer; opacity: {inviteLoading || !inviteEmail.trim() ? 0.5 : 1};">
+                  {inviteLoading ? 'Creating…' : 'Create link'}
+                </button>
+              </form>
+              {#if inviteError}
+                <p class="text-xs mt-2" style="color: #dc2626;">{inviteError}</p>
+              {/if}
+            {/if}
+            <button class="text-xs mt-3 block" style="color: var(--color-secondary); background: none; border: none; cursor: pointer; padding: 0;" on:click={closeInviteForm}>Close</button>
+          </div>
+        {/if}
+
         <div class="rounded-xl overflow-hidden" style="border: 1px solid var(--color-border);">
           {#each org.members as member, i}
             <div class="flex items-center justify-between px-4 py-3"
