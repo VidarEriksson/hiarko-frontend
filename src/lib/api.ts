@@ -90,11 +90,12 @@ export function deleteColumn(columnId: number | string) {
 export function createTask(
   columnId: number | string,
   title: string,
-  description?: string
+  description?: string,
+  assigneeId?: number | null
 ) {
   return request<{ task: any }>(`/columns/${columnId}/tasks`, {
     method: "POST",
-    body: JSON.stringify({ title, description }),
+    body: JSON.stringify({ title, description, assigneeId }),
   });
 }
 
