@@ -183,3 +183,33 @@ export function createOrgBoard(orgId: number | string, name: string) {
     body: JSON.stringify({ name }),
   });
 }
+
+export function listViews(orgId: number | string) {
+  return request<{ views: any[] }>(`/orgs/${orgId}/views`, { method: "GET" });
+}
+
+export function createView(orgId: number | string, name: string, config: any) {
+  return request<{ view: any }>(`/orgs/${orgId}/views`, {
+    method: "POST",
+    body: JSON.stringify({ name, config }),
+  });
+}
+
+export function getView(orgId: number | string, viewId: number | string) {
+  return request<{ view: any }>(`/orgs/${orgId}/views/${viewId}`, { method: "GET" });
+}
+
+export function updateView(orgId: number | string, viewId: number | string, data: { name?: string; config?: any }) {
+  return request<{ view: any }>(`/orgs/${orgId}/views/${viewId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteView(orgId: number | string, viewId: number | string) {
+  return request(`/orgs/${orgId}/views/${viewId}`, { method: "DELETE" });
+}
+
+export function executeView(orgId: number | string, viewId: number | string) {
+  return request<any>(`/orgs/${orgId}/views/${viewId}/tasks`, { method: "GET" });
+}
