@@ -12,6 +12,8 @@
   import Invite from "./routes/invites/[token].svelte";
   import Register from "./routes/Register.svelte";
   import NotFound from "./routes/NotFound.svelte";
+  import ViewPage from "./routes/orgs/views/[id].svelte";
+  import Views from "./routes/Views.svelte";
 
   const routes = {
     "/": Root,
@@ -20,7 +22,9 @@
     "/landing": Landing,
     "/boards": Boards,
     "/boards/:id": Board,
+    "/views": Views,
     "/orgs": Orgs,
+    "/orgs/:orgId/views/:viewId": ViewPage,
     "/orgs/:id": Org,
     "/invites/:token": Invite,
     "*": NotFound,
@@ -39,6 +43,8 @@
 
   $: activeSection = $location.startsWith('/boards')
     ? 'boards'
+    : $location.startsWith('/views') || $location.includes('/views/')
+    ? 'views'
     : $location.startsWith('/orgs')
     ? 'orgs'
     : '';
@@ -253,6 +259,17 @@
           <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
         </svg>
         <span class="nav-item-label" style="opacity: {collapsed ? 0 : 1};">Boards</span>
+      </button>
+
+      <button
+        class="nav-item {activeSection === 'views' ? 'active' : ''}"
+        title={collapsed ? 'Views' : ''}
+        on:click={() => go('/views')}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="nav-item-label" style="opacity: {collapsed ? 0 : 1};">Views</span>
       </button>
 
       <button
